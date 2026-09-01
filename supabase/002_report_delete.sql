@@ -9,9 +9,11 @@
 -- and with no way to remove it the only recourse was the SQL editor.
 --
 -- SECURITY: with no sign-in, this grants the anonymous role delete on EVERY
--- row, not just the caller's own. The dashboard only ever sends ids it fetched
--- for this device_id, but the database cannot enforce that. Anyone holding the
--- publishable key -- which is in the JavaScript bundle -- can delete any report.
+-- row, not just the caller's own. Now that the dashboard is a public board this
+-- matters more, not less: the interface only shows a delete control on reports
+-- filed from the same browser, but that is a courtesy in the UI, not a rule the
+-- database enforces. Anyone holding the publishable key -- which is in the
+-- JavaScript bundle -- can delete every report on the board.
 --
 -- Before any real deployment, add Supabase Auth and replace this with:
 --   using (auth.uid() = user_id)

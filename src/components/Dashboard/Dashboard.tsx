@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useReports } from '@/hooks/useReports';
-import { deleteReport, type StoredReport } from '@/services/reports';
+import { deleteReport, getDeviceId, type StoredReport } from '@/services/reports';
 import { AppError } from '@/types';
 import { downloadReport } from '@/utils/reportPdf';
 import { ErrorNotice } from '@/components/common/ErrorNotice';
@@ -31,6 +31,10 @@ function Tally({ tally }: { tally: Record<string, number> }) {
 function ReportCard({ report, onDeleted }: { report: StoredReport; onDeleted: () => void }) {
   const when = new Date(report.taken_at ?? report.created_at);
   const thumb = report.analyzed_url ?? report.original_url;
+  // Reports are a shared board, so the delete control only appears on your own.
+  // The database cannot enforce this without sign-in — see supabase/002 — but a
+  // board where anyone can wipe everyone's findings is not a board.
+  const mine = report.device_id === getDeviceId();
   const [confirming, setConfirming] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [building, setBuilding] = useState(false);
@@ -45,7 +49,14 @@ function ReportCard({ report, onDeleted }: { report: StoredReport; onDeleted: ()
         className="block aspect-[4/3] w-full object-cover"
       />
       <div className="p-3">
-        <p className="text-base font-bold leading-snug">{report.summary_headline}</p>
+        <div className="flex items-start gap-2">
+          <p className="flex-1 text-base font-bold leading-snug">{report.summary_headline}</p>
+          {mine && (
+            <span className="shrink-0 bg-[var(--color-brand-accent)] px-2 py-0.5 text-xs font-bold text-white">
+              YOURS
+            </span>
+          )}
+        </div>
         <Tally tally={report.tally} />
 
         <dl className="mt-2 space-y-0.5 text-sm text-[var(--text-muted)]">
@@ -107,14 +118,16 @@ function ReportCard({ report, onDeleted }: { report: StoredReport; onDeleted: ()
               Analysed
             </a>
           )}
-          <button
-            type="button"
-            onClick={() => setConfirming(true)}
-            aria-label={`Delete report from ${when.toLocaleString()}`}
-            className="tap ml-auto inline-flex items-center border border-red-300 px-3 text-sm font-semibold text-red-700 hover:bg-red-50 dark:border-red-800 dark:text-red-300 dark:hover:bg-red-950/40"
-          >
-            Delete
-          </button>
+          {mine && (
+            <button
+              type="button"
+              onClick={() => setConfirming(true)}
+              aria-label={`Delete your report from ${when.toLocaleString()}`}
+              className="tap ml-auto inline-flex items-center border border-red-300 px-3 text-sm font-semibold text-red-700 hover:bg-red-50 dark:border-red-800 dark:text-red-300 dark:hover:bg-red-950/40"
+            >
+              Delete
+            </button>
+          )}
         </div>
 
         {error && !confirming && (
@@ -219,8 +232,8 @@ export function Dashboard({
       <div className="border border-[var(--border)] bg-[var(--surface-raised)] p-6 text-center">
         <p className="text-lg font-bold">No reports yet</p>
         <p className="mt-1 text-[var(--text-muted)]">
-          Analyse a photo and save it — it will appear here with both images, the verdict, and
-          where it was taken.
+          Analyse a photo and save it. Saved reports are public — anyone using this app sees
+          them, with both images, the verdict, and where the photo was taken.
         </p>
       </div>
     );
@@ -229,7 +242,8 @@ export function Dashboard({
   return (
     <div className="space-y-4">
       <p className="text-sm text-[var(--text-muted)]">
-        {state.reports.length} report{state.reports.length === 1 ? '' : 's'} from this device.
+        {state.reports.length} report{state.reports.length === 1 ? '' : 's'}, most recent first —
+        everyone sees the same list.
       </p>
       <div className="grid gap-4 sm:grid-cols-2">
         {state.reports.map((r) => (

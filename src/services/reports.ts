@@ -87,10 +87,14 @@ export function storageHint(imgbbAvailable: boolean): string {
 /**
  * A stable per-browser id.
  *
- * Scopes what the dashboard *shows*. It is explicitly NOT a security boundary:
- * with no sign-in, RLS cannot distinguish one anonymous caller from another, so
- * anyone holding the publishable key can read every row. Documented in
- * supabase/001_reports.sql and in the UI.
+ * Reports are a public board — everyone sees everything — so this no longer
+ * filters the dashboard. It is kept because it still answers "did I file this?",
+ * which is what decides whether the delete control appears on a card.
+ *
+ * Explicitly NOT a security boundary: with no sign-in, RLS cannot tell one
+ * anonymous caller from another, so the database will hand any row to anyone
+ * holding the publishable key. The ownership check is a courtesy in the
+ * interface, not a rule the database enforces.
  */
 export function getDeviceId(): string {
   const KEY = 'siger.device-id';
@@ -203,7 +207,12 @@ export async function saveReport(report: NewReport): Promise<StoredReport> {
   return saved;
 }
 
-/** Most recent first, scoped to this browser. */
+/**
+ * Every report, most recent first.
+ *
+ * Deliberately unfiltered: this is a shared record of what has been found and
+ * where, so a report filed on one phone is visible from every other.
+ */
 export async function listReports(limit = STORAGE.PAGE_SIZE): Promise<StoredReport[]> {
   const cfg = getSupabaseConfig();
   if (!cfg) {
@@ -213,9 +222,7 @@ export async function listReports(limit = STORAGE.PAGE_SIZE): Promise<StoredRepo
   }
 
   const query =
-    `${cfg.url}/rest/v1/reports?select=*` +
-    `&device_id=eq.${encodeURIComponent(getDeviceId())}` +
-    `&order=created_at.desc&limit=${limit}`;
+    `${cfg.url}/rest/v1/reports?select=*&order=created_at.desc&limit=${limit}`;
 
   const response = await fetch(query, { headers: headers(cfg) }).catch((cause: unknown) => {
     throw new AppError('REPORT_FETCH_FAILED', 'Saved reports could not be loaded.', {

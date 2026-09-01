@@ -101,7 +101,9 @@ export function HomePage() {
         {(
           [
             ['analyze', 'Analyze'],
-            ['reports', 'My reports'],
+            // Not "My reports" — the board is shared, and a label that claims
+            // otherwise misrepresents who can see what was filed.
+            ['reports', 'All reports'],
           ] as const
         ).map(([id, label]) => (
           <button
@@ -128,7 +130,7 @@ export function HomePage() {
 
       <main className="flex-1 pb-4">
         {tab === 'reports' && (
-          <section aria-label="Saved reports" className="mt-5">
+          <section aria-label="All reports" className="mt-5">
             <Dashboard active={tab === 'reports'} imgbbAvailable={imgbbAvailable} />
           </section>
         )}
@@ -321,8 +323,8 @@ export function HomePage() {
                           {saver.state.status === 'saving' ? saver.state.step : 'Save this report'}
                         </button>
                         <p className="mt-2 text-sm text-[var(--text-muted)]">
-                          Uploads both photos to a public image host and files the verdict, place
-                          and time. Anyone with the image link can view it.
+                          Saved reports are public: both photos, the verdict, and where and when
+                          the photo was taken become visible to everyone using this app.
                         </p>
                       </>
                     )}

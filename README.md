@@ -35,9 +35,10 @@ supabase/002_report_delete.sql  →  then this, to allow deleting reports
 
 Until you do, the **My reports** tab says exactly that and names the file. With
 it in place, saving a report uploads both images, files the verdict, place and
-time, and the dashboard lists everything from this device, each with a downloadable
-**PDF report** carrying both photographs, the item table, the location and both
-timestamps.
+time, and the dashboard lists **every** report — from every device — each with a
+downloadable **PDF report** carrying both photographs, the item table, the
+location and both timestamps. Saved reports are public by design: a report filed
+on one phone is visible from every other.
 
 > **Both images are uploaded to ImgBB, which has no access control.** Every
 > returned URL is viewable by anyone who has it. Street photographs can contain
@@ -288,11 +289,13 @@ npm run eval -- ./my-images     # WET/ DRY/ HAZARDOUS/ subfolders
    is a second one.
 8. **Model availability fluctuates.** Individual models return "experiencing
    high demand" without warning; the fallback chain exists because of it.
-9. **Saved reports are not private.** Images go to a public host, and with no
-   sign-in the database RLS policies are open to the anonymous role — anyone
-   with the publishable key, which is in the bundle, can read every row.
-   `device_id` scopes what the dashboard *shows*, not what the database returns.
-   Add Supabase Auth before any real deployment; the migration says how.
+9. **Saved reports are public, by design.** Everyone sees every report: both
+   photographs, the verdict, and where and when the photo was taken. Images are
+   on a host with no access control. What is *not* by design is that the same
+   openness applies to writes — anyone with the publishable key, which is in the
+   bundle, can file a report as anyone or delete any report. The interface only
+   offers deletion of your own; the database does not enforce that. Add Supabase
+   Auth before any real deployment; the migrations say how.
 10. **It is a decision aid, not an authority.** For medical, chemical or
     electronic waste, follow your local rules.
 

@@ -10,8 +10,10 @@ create table if not exists public.reports (
   id               uuid primary key default gen_random_uuid(),
   created_at       timestamptz not null default now(),
 
-  -- Identifies the browser that filed the report. NOT a security boundary --
-  -- see the RLS note below.
+  -- Identifies the browser that filed the report. Reports are a PUBLIC board --
+  -- every row is visible to everyone -- so this does not scope the dashboard.
+  -- It only answers "did I file this?", which decides whether the delete
+  -- control appears. NOT a security boundary; see the RLS note below.
   device_id        text not null,
 
   -- ImgBB URLs. Both are PUBLIC: anyone holding the link can view the image.
@@ -46,12 +48,15 @@ alter table public.reports enable row level security;
 -- SECURITY NOTE, read before going public.
 --
 -- The app has no sign-in, so these policies are open to the anonymous role.
--- `device_id` scopes what the dashboard *displays*; it does NOT restrict what
--- the database will return. Anyone with the publishable key -- which is in the
--- JavaScript bundle and therefore public -- can read every row.
+-- Reports are intended to be public and readable by everyone, so the open
+-- SELECT policy is the design rather than an oversight.
 --
--- That is acceptable for a demo or a single-operator tool. Before any real
--- deployment, add Supabase Auth and replace these with:
+-- What is NOT intended: the same openness applies to INSERT and DELETE. Anyone
+-- with the publishable key -- which is in the JavaScript bundle and therefore
+-- public -- can file a report as anyone, or delete any report. The interface
+-- only offers deletion of your own, but the database does not enforce that.
+--
+-- Before any real deployment, add Supabase Auth and replace these with:
 --
 --   using (auth.uid() = user_id)  /  with check (auth.uid() = user_id)
 --
