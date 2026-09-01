@@ -51,13 +51,37 @@ export function getSupabaseConfig(): SupabaseConfig | null {
 }
 
 /**
- * True when both halves of the pipeline are configured.
+ * What is still missing before reports can be saved.
  *
- * The image host's key is server-side now, so the browser cannot see it — it is
- * reported by `/api/config`, which the engine fetches during `prepare()`.
+ * Returns the specific variables rather than a bare boolean. The previous
+ * message named all three every time and named the wrong one for the image
+ * host — it still said `VITE_IMGBB_API_KEY` after that key moved server-side,
+ * so following the instruction exactly would not have fixed anything.
  */
+export function missingStorageConfig(imgbbAvailable: boolean): string[] {
+  const missing: string[] = [];
+  if (!imgbbAvailable) missing.push('IMGBB_API_KEY (server-side, no VITE_ prefix)');
+  if (!(import.meta.env.VITE_SUPABASE_URL as string | undefined)?.trim()) {
+    missing.push('VITE_SUPABASE_URL');
+  }
+  if (!(import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined)?.trim()) {
+    missing.push('VITE_SUPABASE_ANON_KEY');
+  }
+  return missing;
+}
+
 export function isStorageConfigured(imgbbAvailable: boolean): boolean {
-  return getSupabaseConfig() !== null && imgbbAvailable;
+  return missingStorageConfig(imgbbAvailable).length === 0;
+}
+
+/** Advice that names the actual gap, and where to set it. */
+export function storageHint(imgbbAvailable: boolean): string {
+  const missing = missingStorageConfig(imgbbAvailable);
+  if (missing.length === 0) return '';
+  const where = import.meta.env.DEV
+    ? 'in .env, then restart the dev server'
+    : 'in your deployment’s environment variables, then redeploy';
+  return `Still to set: ${missing.join(', ')} — ${where}.`;
 }
 
 /**

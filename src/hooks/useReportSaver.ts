@@ -1,6 +1,11 @@
 import { useCallback, useRef, useState } from 'react';
 import { uploadImage } from '@/services/imgbb';
-import { isStorageConfigured, saveReport, type StoredReport } from '@/services/reports';
+import {
+  isStorageConfigured,
+  saveReport,
+  storageHint,
+  type StoredReport,
+} from '@/services/reports';
 import { renderAnalyzedImage } from '@/utils/renderAnalyzedImage';
 import { AppError, type AnalysisResult, type GeoStatus } from '@/types';
 
@@ -38,7 +43,7 @@ export function useReportSaver() {
         setState({
           status: 'error',
           error: new AppError('STORAGE_NOT_CONFIGURED', 'Report saving is not configured.', {
-            hint: 'Set VITE_IMGBB_API_KEY, VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in .env.',
+            hint: storageHint(imgbbAvailable),
           }),
         });
         return;

@@ -34,19 +34,19 @@ describe('ModelLoader', () => {
     // that has to be loud and actionable.
     const onRetry = vi.fn();
     const error = new AppError('API_KEY_MISSING', 'No Gemini API key is configured.', {
-      hint: 'Copy .env.example to .env, set VITE_GEMINI_API_KEY, then restart the dev server.',
+      hint: 'Set GEMINI_API_KEY (no VITE_ prefix) in your environment, then redeploy.',
     });
     render(<ModelLoader status={status({ stage: 'error', error })} onRetry={onRetry} />);
 
     expect(screen.getByRole('alert')).toHaveTextContent('No Gemini API key is configured.');
-    expect(screen.getByText(/VITE_GEMINI_API_KEY/)).toBeInTheDocument();
+    expect(screen.getByText(/GEMINI_API_KEY/)).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: /check again/i }));
     expect(onRetry).toHaveBeenCalledOnce();
   });
 
   it('shows the hint rather than a stack trace when the key is rejected', () => {
     const error = new AppError('API_KEY_INVALID', 'The Gemini API key was rejected.', {
-      hint: 'Check VITE_GEMINI_API_KEY in your .env file.',
+      hint: 'Check GEMINI_API_KEY on the server, then redeploy.',
       detail: 'HTTP 403: permission denied',
     });
     render(<ModelLoader status={status({ stage: 'error', error })} onRetry={vi.fn()} />);

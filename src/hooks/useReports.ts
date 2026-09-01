@@ -1,5 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { isStorageConfigured, listReports, type StoredReport } from '@/services/reports';
+import {
+  isStorageConfigured,
+  listReports,
+  storageHint,
+  type StoredReport,
+} from '@/services/reports';
 import { AppError } from '@/types';
 
 export type ReportsState =
@@ -24,7 +29,7 @@ export function useReports(enabled: boolean, imgbbAvailable: boolean) {
       setState({
         status: 'error',
         error: new AppError('STORAGE_NOT_CONFIGURED', 'Saved reports are not configured.', {
-          hint: 'Set VITE_IMGBB_API_KEY, VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in .env.',
+          hint: storageHint(imgbbAvailable),
         }),
       });
       return;
