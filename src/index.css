@@ -1,0 +1,171 @@
+@import 'tailwindcss';
+
+/*
+  Design tokens.
+
+  Colour carries the primary meaning here: the four streams map onto the bins
+  people actually have in front of them (India SWM Rules 2016 — green for wet,
+  blue for dry). Colour is never the *only* signal, though: every verdict also
+  carries an icon and a word, because roughly 1 in 12 men cannot reliably
+  separate the green and red used for WET and HAZARDOUS.
+*/
+@theme {
+  /* --- SIGER foundations ------------------------------------------------ */
+  --font-sans: 'Source Sans Pro', ui-sans-serif, system-ui, -apple-system, sans-serif;
+
+  --color-wet: #047857;
+  --color-wet-soft: #ecfdf5;
+  --color-dry: #0369a1;
+  --color-dry-soft: #f0f9ff;
+  --color-hazard: #b91c1c;
+  --color-hazard-soft: #fef2f2;
+  --color-unsure: #b45309;
+  --color-unsure-soft: #fffbeb;
+
+  /* SIGER brand. Measured against `surface.base` #000000:
+       text.primary  #ffffff  21.00:1  PASS
+       text.inverse  #a6d5ba  12.85:1  PASS
+       text.secondary #28256b  1.57:1  FAIL — unusable as text
+       text.tertiary  #008639  4.47:1  FAIL for body, passes large/UI
+     So #28256b and #008639 are carried as SURFACE colours, which is what they
+     actually work as: white on them scores 13.40:1 and 4.70:1. */
+  --color-brand-ink: #ffffff;
+  --color-brand-surface: #28256b;
+  --color-brand-surface-dark: #1b194b;
+  --color-brand-surface-darker: #14123f;
+  --color-brand-accent: #008639;
+  --color-brand-accent-hover: #3ba267;
+  --color-brand-accent-soft: #a6d5ba;
+}
+
+/*
+  SIGER surfaces.
+
+  Light-first, because that is what the brand palette is actually built for.
+  Measured: #28256b on white is 13.40:1 and #008639 on white is 4.70:1 — both
+  pass AA. On the #000000 surface named in the supplied token set they score
+  1.57:1 and 4.47:1, i.e. unusable. The extracted `surface.base` was wrong; the
+  live site is a white site with indigo and green on it.
+*/
+:root {
+  --surface: #f4f5f7;
+  --surface-raised: #ffffff;
+  --border: #d8dbe2;
+  --text: #1f2130;
+  --text-muted: #4d5163;
+  --bar: rgb(255 255 255 / 0.94);
+  /* SIGER uses `border-radius: 0` 52 times in its stylesheet. Square is the
+     single most recognisable trait of the brand, so it is a token, not a
+     per-component choice. */
+  --radius: 0px;
+  --radius-sm: 0px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* The brand indigo, deepened, rather than a neutral slate — so the dark
+       theme still reads as SIGER instead of as a different product. */
+    --surface: #14123f;
+    --surface-raised: #1b194b;
+    --border: #35326f;
+    --text: #ffffff;
+    /* #a6d5ba is the brand's own light tone and scores 12.85:1 here, well past
+       the 4.5:1 floor a muted grey would have missed. */
+    --text-muted: #b9bad4;
+    --bar: rgb(20 18 63 / 0.94);
+  }
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  background: var(--surface);
+}
+
+body {
+  font-family: var(--font-sans);
+  background: var(--surface);
+  color: var(--text);
+  /*
+    16px minimum. The previous design ran most of its interface at 12px, which
+    is uncomfortable on a phone held at arm's length over a bin — the actual
+    posture this app is used in.
+  */
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+:root {
+  /*
+    SIGER scales, namespaced.
+
+    These deliberately do NOT use the `--text-*` / `--spacing-*` names. In
+    Tailwind 4 those keys inside `@theme` REDEFINE the utility scales, so
+    declaring `--spacing-4: 8px` silently rewrote every `p-4` in the app from
+    16px to 8px and `--text-2xl: 17.34px` collapsed the page h1 from 24px to
+    17.34px. The layout shrank without a single component changing.
+
+    SIGER's scale is built for a dense content site. This is a touch-first
+    camera app where controls must clear 44px, so the two are applied by role
+    rather than wholesale — see DESIGN_SYSTEM.md.
+  */
+  --siger-text-xs: 9px;
+  --siger-text-sm: 10.67px;
+  --siger-text-md: 13.33px;
+  --siger-text-lg: 14px;
+  --siger-text-xl: 16px;
+  --siger-text-2xl: 17.34px;
+  --siger-text-3xl: 18.66px;
+  --siger-text-4xl: 20px;
+
+  --siger-space-1: 2px;
+  --siger-space-2: 5px;
+  --siger-space-3: 7px;
+  --siger-space-4: 8px;
+  --siger-space-5: 10px;
+  --siger-space-6: 15px;
+  --siger-space-7: 20px;
+  --siger-space-8: 25px;
+
+  /* Motion */
+  --motion-instant: 200ms;
+  --motion-fast: 300ms;
+  --motion-normal: 600ms;
+  /* Elevation */
+  --shadow-1: rgba(0, 0, 0, 0.51) 0px 0px 6px 0px inset;
+  --shadow-2: rgba(0, 0, 0, 0.38) 0px 0px 5px 0px;
+}
+
+/* Keep the sticky action bar clear of the iPhone home indicator. */
+.pb-safe {
+  padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+}
+.pt-safe {
+  padding-top: max(0.75rem, env(safe-area-inset-top));
+}
+
+/*
+  Every interactive element clears 44x44 CSS px — the smallest target most
+  adults can hit reliably with a thumb. Audited: the old soiling buttons were
+  30px tall and the details toggle 16px.
+*/
+.tap {
+  min-height: 44px;
+}
+
+:where(button, a, summary, input, [tabindex]):focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+  border-radius: 0.5rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

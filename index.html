@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AI Waste Segregation — wet, dry or hazardous</title>
+    <meta
+      name="description"
+      content="Identify household waste as wet, dry or hazardous from a photo or your camera, using Google's Gemini API."
+    />
+    <meta name="theme-color" content="#059669" />
+    <!--
+      Every external host the app may contact, and no others. If any code tried
+      to send a photo, a coordinate or a report anywhere else, the browser would
+      block it.
+
+        generativelanguage.googleapis.com  the photo, for classification
+        nominatim.openstreetmap.org        the coordinates, for an address
+        api.imgbb.com                      both images, for the report
+        *.supabase.co                      the report row
+        i.ibb.co                           hosted images, shown and embedded in PDFs
+
+      This is a much weaker guarantee than the original local-only build had.
+      The UI states each disclosure rather than implying otherwise.
+
+      `worker-src blob:` is required: the image pipeline decodes off the main
+      thread, and without it the composite step fails with a CSP violation
+      rather than an error the user could act on.
+    -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data: https://i.ibb.co; media-src 'self' blob:; worker-src 'self' blob:; connect-src 'self' https://generativelanguage.googleapis.com https://nominatim.openstreetmap.org https://api.imgbb.com https://*.supabase.co https://i.ibb.co; object-src 'none'; base-uri 'self'; form-action 'none'"
+    />
+  </head>
+  <body>
+    <div id="root"></div>
+    <noscript>
+      This application needs JavaScript enabled.
+    </noscript>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

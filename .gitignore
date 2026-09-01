@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.model-build/
+.venv-export/
+public/wasm/
+*.local
+__pycache__/
+.DS_Store
+.env
+*.tsbuildinfo

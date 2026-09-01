@@ -1,0 +1,92 @@
+[
+  {
+    "name": "banana-peel",
+    "file": "banana-peel.jpg",
+    "expected": "WET",
+    "title": "File:Banane-A-05 cropped.jpg",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/64/Banane-A-05_cropped.jpg/960px-Banane-A-05_cropped.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "descriptionurl": "https://commons.wikimedia.org/wiki/File:Banane-A-05_cropped.jpg",
+    "license": "Public domain",
+    "artist": "Priwo"
+  },
+  {
+    "name": "vegetable-waste",
+    "file": "vegetable-waste.jpg",
+    "expected": "WET",
+    "title": "File:Kitchen food waste, vegetable peelings & coffee grounds in biodegradable bag.jpg",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/17/Kitchen_food_waste%2C_vegetable_peelings_%26_coffee_grounds_in_biodegradable_bag.jpg/960px-Kitchen_food_waste%2C_vegetable_peelings_%26_coffee_grounds_in_biodegradable_bag.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "descriptionurl": "https://commons.wikimedia.org/wiki/File:Kitchen_food_waste,_vegetable_peelings_%26_coffee_grounds_in_biodegradable_bag.jpg",
+    "license": "CC BY-SA 4.0",
+    "artist": "Tek monde"
+  },
+  {
+    "name": "apple-core",
+    "file": "apple-core.jpg",
+    "expected": "WET",
+    "title": "File:Red Apple.jpg",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/15/Red_Apple.jpg/960px-Red_Apple.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "descriptionurl": "https://commons.wikimedia.org/wiki/File:Red_Apple.jpg",
+    "license": "CC BY 2.0",
+    "artist": "Abhijit Tembhekar from Mumbai, India"
+  },
+  {
+    "name": "plastic-bottle",
+    "file": "plastic-bottle.jpg",
+    "expected": "DRY",
+    "title": "File:Empty Plastic Bottle.jpg",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/55/Empty_Plastic_Bottle.jpg/960px-Empty_Plastic_Bottle.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "descriptionurl": "https://commons.wikimedia.org/wiki/File:Empty_Plastic_Bottle.jpg",
+    "license": "CC0",
+    "artist": "Echendu Tracy"
+  },
+  {
+    "name": "cardboard-box",
+    "file": "cardboard-box.jpg",
+    "expected": "DRY",
+    "title": "File:Cardboard box.jpg",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d7/Cardboard_box.jpg/960px-Cardboard_box.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "descriptionurl": "https://commons.wikimedia.org/wiki/File:Cardboard_box.jpg",
+    "license": "CC BY-SA 4.0",
+    "artist": "MrBeastRapper"
+  },
+  {
+    "name": "newspaper",
+    "file": "newspaper.jpg",
+    "expected": "DRY",
+    "title": "File:Newspapers.jpg",
+    "url": "https://upload.wikimedia.org/wikipedia/commons/b/b7/Newspapers.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+    "descriptionurl": "https://commons.wikimedia.org/wiki/File:Newspapers.jpg",
+    "license": "CC BY 2.5",
+    "artist": "Original uploader was Hmbr at he.wikipedia"
+  },
+  {
+    "name": "aluminium-can",
+    "file": "aluminium-can.jpg",
+    "expected": "DRY",
+    "title": "File:Drinking can ring-pull tab.jpg",
+    "url": "https://upload.wikimedia.org/wikipedia/commons/f/ff/Drinking_can_ring-pull_tab.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+    "descriptionurl": "https://commons.wikimedia.org/wiki/File:Drinking_can_ring-pull_tab.jpg",
+    "license": "CC BY 2.0",
+    "artist": "Marcos Andr\u00e9"
+  },
+  {
+    "name": "glass-bottle",
+    "file": "glass-bottle.jpg",
+    "expected": "DRY",
+    "title": "File:Empty green bottles of Gordon\u2019s gin.jpg",
+    "url": "https://upload.wikimedia.org/wikipedia/commons/e/e7/Empty_green_bottles_of_Gordon%E2%80%99s_gin.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+    "descriptionurl": "https://commons.wikimedia.org/wiki/File:Empty_green_bottles_of_Gordon%E2%80%99s_gin.jpg",
+    "license": "CC BY 2.0",
+    "artist": "phault"
+  },
+  {
+    "name": "battery",
+    "file": "battery.jpg",
+    "expected": "HAZARDOUS",
+    "title": "File:AA VARTA battery-side PNr\u00b00782.jpg",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c8/AA_VARTA_battery-side_PNr%C2%B00782.jpg/960px-AA_VARTA_battery-side_PNr%C2%B00782.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "descriptionurl": "https://commons.wikimedia.org/wiki/File:AA_VARTA_battery-side_PNr%C2%B00782.jpg",
+    "license": "CC BY-SA 4.0",
+    "artist": "D-Kuru"
+  }
+]
