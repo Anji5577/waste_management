@@ -44,6 +44,16 @@ async function text(blob: Blob): Promise<string> {
   return Buffer.from(await blob.arrayBuffer()).toString('latin1');
 }
 
+describe('buildReportPdf — removed content', () => {
+  it('carries no disclaimer or attribution footer', async () => {
+    // Removed at the owner's request. Asserted so it cannot creep back in.
+    const raw = await text(await buildReportPdf(report, loader));
+    expect(raw).not.toMatch(/decision aid/i);
+    expect(raw).not.toMatch(/not one trained on waste/i);
+    expect(raw).not.toMatch(/OpenStreetMap/i);
+  });
+});
+
 describe('buildReportPdf', () => {
   it('produces a real PDF', async () => {
     const blob = await buildReportPdf(report, loader);

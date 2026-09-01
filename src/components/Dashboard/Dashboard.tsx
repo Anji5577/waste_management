@@ -54,14 +54,7 @@ function ReportCard({ report, onDeleted }: { report: StoredReport; onDeleted: ()
         className="block aspect-[4/3] w-full object-cover"
       />
       <div className="p-3">
-        <div className="flex items-start gap-2">
-          <p className="flex-1 text-base font-bold leading-snug">{report.summary_headline}</p>
-          {mine && (
-            <span className="shrink-0 bg-[var(--color-brand-accent)] px-2 py-0.5 text-xs font-bold text-white">
-              YOURS
-            </span>
-          )}
-        </div>
+        <p className="text-base font-bold leading-snug">{report.summary_headline}</p>
         <Tally tally={report.tally} />
 
         <dl className="mt-2 space-y-0.5 text-sm text-[var(--text-muted)]">

@@ -1,6 +1,5 @@
 import { jsPDF } from 'jspdf';
 import type { StoredReport } from '@/services/reports';
-import { OSM_ATTRIBUTION } from '@/utils/reverseGeocode';
 
 /**
  * A4 report as a real PDF.
@@ -230,16 +229,6 @@ export async function buildReportPdf(
     doc.setPage(p);
     doc.setDrawColor(LINE).setLineWidth(0.2).line(M, PAGE.h - 20, PAGE.w - M, PAGE.h - 20);
     doc.setTextColor(MUTED).setFont('helvetica', 'normal').setFontSize(7);
-    doc.text(
-      wrap(
-        doc,
-        'Classification by a general-purpose model, not one trained on waste. Confidence figures are ' +
-          `the model's own estimate, not measured accuracy. A decision aid, not an authority. Addresses ${OSM_ATTRIBUTION}.`,
-        CONTENT - 22,
-      ),
-      M,
-      PAGE.h - 15,
-    );
     doc.text(`${p} / ${pages}`, PAGE.w - M, PAGE.h - 15, { align: 'right' });
   }
 

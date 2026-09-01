@@ -10,7 +10,6 @@ import { ErrorNotice } from '@/components/common/ErrorNotice';
 import { ActionBar, PrimaryButton, SecondaryButton } from '@/components/common/ActionBar';
 import { canvasToBlob } from '@/ai/preprocessing/image';
 import { isCameraSupported } from '@/utils/camera';
-import { OSM_ATTRIBUTION } from '@/utils/reverseGeocode';
 import { Dashboard } from '@/components/Dashboard/Dashboard';
 import { useReportSaver } from '@/hooks/useReportSaver';
 import { isStorageConfigured } from '@/services/reports';
@@ -337,15 +336,6 @@ export function HomePage() {
         </>
         )}
 
-        <footer className="mt-10 border-t border-[var(--border)] pt-5 text-sm leading-relaxed text-[var(--text-muted)]">
-          <p>
-            A decision aid, not an authority. Answers come from a general-purpose model, not one
-            trained on waste, and its stated confidence is a self-report rather than a measured
-            probability. For medical, chemical or electronic waste, follow your local rules.
-          </p>
-          {/* Required by the geocoder's licence wherever its results are shown. */}
-          <p className="mt-2">Addresses {OSM_ATTRIBUTION}.</p>
-        </footer>
       </main>
 
       {/* --- Persistent primary action, in the thumb zone ----------------- */}
