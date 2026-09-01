@@ -84,10 +84,16 @@ export const GEMINI = {
   FALLBACK_MODELS: ['gemini-3-flash-preview', 'gemini-3.6-flash'] as readonly string[],
 
   /**
-   * Per-request timeout. Generous because the slower fallbacks genuinely take
-   * tens of seconds, and a timeout here means the user gets nothing at all.
+   * Per-request timeout.
+   *
+   * Kept just under the 60s ceiling declared for the serverless function in
+   * vercel.json, so the client aborts first with an error it can explain rather
+   * than the platform killing the invocation and returning an opaque 504.
+   *
+   * Each fallback attempt is a separate invocation, so the chain is not bounded
+   * by this — only each individual call is.
    */
-  REQUEST_TIMEOUT_MS: 60_000,
+  REQUEST_TIMEOUT_MS: 55_000,
 
   /**
    * Two boxes overlapping by more than this are treated as the same object.

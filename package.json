@@ -3,7 +3,7 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "description": "Waste segregation — WET / DRY / HAZARDOUS / UNCERTAIN, via the Gemini API",
+  "description": "Waste segregation \u2014 WET / DRY / HAZARDOUS / UNCERTAIN, via the Gemini API",
   "license": "MIT",
   "scripts": {
     "dev": "vite",
@@ -40,5 +40,8 @@
     "typescript-eslint": "^8.0.0",
     "vite": "^7.0.0",
     "vitest": "^3.0.0"
+  },
+  "engines": {
+    "node": ">=20"
   }
 }

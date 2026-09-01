@@ -11,6 +11,9 @@
  * debugged in production.
  */
 
+/** Just the shape we read, so the function bundle needs no @types/node. */
+export type Env = Record<string, string | undefined>;
+
 export interface HandlerResult {
   status: number;
   body: unknown;
@@ -41,7 +44,7 @@ function missingKey(name: string): HandlerResult {
 }
 
 /** What the browser is allowed to know about server configuration. */
-export function handleConfig(env: NodeJS.ProcessEnv): HandlerResult {
+export function handleConfig(env: Env): HandlerResult {
   return {
     status: 200,
     body: {
@@ -60,7 +63,7 @@ export function handleConfig(env: NodeJS.ProcessEnv): HandlerResult {
  */
 export async function handleGemini(
   payload: unknown,
-  env: NodeJS.ProcessEnv,
+  env: Env,
 ): Promise<HandlerResult> {
   const key = env.GEMINI_API_KEY?.trim();
   if (!key) return missingKey('GEMINI_API_KEY');
@@ -90,7 +93,7 @@ export async function handleGemini(
 /** Forward one image upload to ImgBB, attaching the key server-side. */
 export async function handleImgbb(
   payload: unknown,
-  env: NodeJS.ProcessEnv,
+  env: Env,
 ): Promise<HandlerResult> {
   const key = env.IMGBB_API_KEY?.trim();
   if (!key) return missingKey('IMGBB_API_KEY');

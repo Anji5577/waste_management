@@ -69,9 +69,17 @@ browser makes no request to `googleapis.com` or `api.imgbb.com` — only to
 `/api/*` on its own origin. The CSP no longer permits those hosts at all, so a
 future change that tried to call them directly would be blocked.
 
-Vercel auto-detects the Vite build and the `api/` functions; no `vercel.json` is
-needed. Files beginning with `_` (like `api/_handlers.ts`) are shared code, not
-routes.
+`vercel.json` declares the build and the functions explicitly rather than relying
+on auto-detection, which silently produced a static-only deployment where
+`/api/config` 404'd. It also raises `maxDuration` to 60s: the Hobby default is
+10s and Gemini calls measured 6-50s, so every analysis would otherwise be killed
+mid-flight. Files beginning with `_` (like `api/_handlers.ts`) are shared code,
+not routes.
+
+**If `/api/config` still 404s**, check **Settings → General → Root Directory** in
+the Vercel project. It must be the repository root (blank or `.`); if it points
+at a subdirectory, `api/` is outside the deployment and no configuration file can
+help.
 
 Locally, `npm run dev` serves the same handlers through a Vite middleware, so the
 proxy can be exercised without the Vercel CLI.
