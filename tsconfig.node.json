@@ -26,13 +26,15 @@
         "./src/*"
       ]
     },
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    "allowJs": true,
+    "checkJs": true
   },
   "include": [
     "vite.config.ts",
     "vitest.config.ts",
     "scripts/**/*.ts",
     "tests/**/*.ts",
-    "api/**/*.ts"
+    "api/**/*.js"
   ]
 }

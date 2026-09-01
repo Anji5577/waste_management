@@ -73,8 +73,16 @@ future change that tried to call them directly would be blocked.
 on auto-detection, which silently produced a static-only deployment where
 `/api/config` 404'd. It also raises `maxDuration` to 60s: the Hobby default is
 10s and Gemini calls measured 6-50s, so every analysis would otherwise be killed
-mid-flight. Files beginning with `_` (like `api/_handlers.ts`) are shared code,
-not routes.
+mid-flight.
+
+The functions are plain ESM **JavaScript**, not TypeScript. A `.ts` function has
+to be compiled by the platform before it can be routed, and when that step does
+not happen the symptom is an opaque 404 with nothing in the build log to explain
+it. `.js` is the least ambiguous thing a Node runtime can consume, and it can be
+executed directly — `node -e "import('./api/config.js')"` runs the real handler
+with no build step. Types are kept through JSDoc and still checked by `tsc`.
+
+Files beginning with `_` (like `api/_handlers.js`) are shared code, not routes.
 
 **If `/api/config` still 404s**, check **Settings → General → Root Directory** in
 the Vercel project. It must be the repository root (blank or `.`); if it points

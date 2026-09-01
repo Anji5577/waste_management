@@ -1,6 +1,6 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { loadEnv, type Plugin } from 'vite';
-import { handleConfig, handleGemini, handleImgbb } from '../api/_handlers';
+import { handleConfig, handleGemini, handleImgbb } from '../api/_handlers.js';
 
 /**
  * Serve the `/api/*` handlers during `vite dev` and `vite preview`.
