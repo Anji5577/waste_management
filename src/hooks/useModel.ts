@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { getEngine } from '@/ai/engine';
+import { fetchServerConfig } from '@/ai/gemini/apiKey';
 import type { EngineStatus } from '@/types';
 
 const IDLE: EngineStatus = { stage: 'idle', message: 'Checking configuration…', error: null };
@@ -14,6 +15,9 @@ const IDLE: EngineStatus = { stage: 'idle', message: 'Checking configuration…'
  */
 export function useModel() {
   const [status, setStatus] = useState<EngineStatus>(IDLE);
+  // Whether the server holds an image-host key. The browser cannot check this
+  // itself now that the key is server-side.
+  const [imgbbAvailable, setImgbbAvailable] = useState(false);
   const mounted = useRef(true);
 
   useEffect(() => {
@@ -28,6 +32,8 @@ export function useModel() {
       await getEngine().prepare((s) => {
         if (mounted.current) setStatus(s);
       });
+      const config = await fetchServerConfig();
+      if (mounted.current) setImgbbAvailable(config.imgbb);
     } catch {
       // prepare() already reported the failure through onStatus; swallowing here
       // keeps an already-surfaced error out of the console as an unhandled
@@ -39,5 +45,5 @@ export function useModel() {
     void load();
   }, [load]);
 
-  return { status, reload: load, isReady: status.stage === 'ready' };
+  return { status, reload: load, isReady: status.stage === 'ready', imgbbAvailable };
 }

@@ -33,7 +33,7 @@ type Source = { blob: Blob; url: string; location: GeoStatus } | null;
  * only what is relevant, and the result scrolls itself into view.
  */
 export function HomePage() {
-  const { status, reload, isReady } = useModel();
+  const { status, reload, isReady, imgbbAvailable } = useModel();
   const { state, run, reset, answerClarification } = useAnalysis();
   const saver = useReportSaver();
   const [tab, setTab] = useState<'analyze' | 'reports'>('analyze');
@@ -129,7 +129,7 @@ export function HomePage() {
       <main className="flex-1 pb-4">
         {tab === 'reports' && (
           <section aria-label="Saved reports" className="mt-5">
-            <Dashboard active={tab === 'reports'} />
+            <Dashboard active={tab === 'reports'} imgbbAvailable={imgbbAvailable} />
           </section>
         )}
 
@@ -266,7 +266,7 @@ export function HomePage() {
                   onHoverObject={setHovered}
                 />
 
-                {isStorageConfigured() && (
+                {isStorageConfigured(imgbbAvailable) && (
                   <div className="mt-4 border border-[var(--border)] bg-[var(--surface-raised)] p-4">
                     {savedReport ? (
                       <div className="flex flex-wrap items-center gap-3">
@@ -297,6 +297,7 @@ export function HomePage() {
                             result,
                             source.location,
                             source.location.point?.timestamp ?? null,
+                            imgbbAvailable,
                           )
                         }
                         retryLabel="Try saving again"
@@ -312,6 +313,7 @@ export function HomePage() {
                               result,
                               source.location,
                               source.location.point?.timestamp ?? null,
+                              imgbbAvailable,
                             )
                           }
                           className="tap w-full bg-[var(--color-brand-accent)] px-4 text-base font-semibold text-white hover:bg-[var(--color-brand-accent-hover)] disabled:opacity-45"

@@ -1,31 +1,46 @@
 import { AppError } from '@/types';
 
 /**
- * Read the build-time Gemini API key.
+ * What the server will admit about its own configuration.
  *
- * IMPORTANT: `VITE_`-prefixed variables are inlined into the JavaScript bundle
- * at build time. This key is therefore readable by anyone who loads the site —
- * it is not a secret, and a deployed build hands it to every visitor, billed to
- * whoever owns it. That trade-off was chosen deliberately for local and private
- * use; see README → Security before deploying this anywhere public.
+ * The Gemini and ImgBB keys live in the server environment without a `VITE_`
+ * prefix, so they are never inlined into the bundle and the browser cannot read
+ * them. It can only ask whether they are *present* — which is all the UI needs
+ * to tell the user what to fix.
  */
-export function getApiKey(): string {
-  const key = import.meta.env.VITE_GEMINI_API_KEY as string | undefined;
-  if (!key || key.trim() === '' || key === 'your-api-key-here') {
-    throw new AppError('API_KEY_MISSING', 'No Gemini API key is configured.', {
-      hint:
-        'Copy .env.example to .env, set VITE_GEMINI_API_KEY to a key from Google AI Studio, ' +
-        'then restart the dev server.',
-    });
-  }
-  return key.trim();
+export interface ServerConfig {
+  readonly gemini: boolean;
+  readonly imgbb: boolean;
 }
 
-export function hasApiKey(): boolean {
+let cached: ServerConfig | null = null;
+
+export async function fetchServerConfig(force = false): Promise<ServerConfig> {
+  if (cached && !force) return cached;
+
+  let response: Response;
   try {
-    getApiKey();
-    return true;
-  } catch {
-    return false;
+    response = await fetch('/api/config');
+  } catch (cause) {
+    throw new AppError('API_KEY_MISSING', 'The server could not be reached.', {
+      hint: 'Check your connection. In development, make sure `npm run dev` is running.',
+      cause,
+    });
   }
+
+  if (!response.ok) {
+    throw new AppError('API_KEY_MISSING', 'The server did not report its configuration.', {
+      hint: 'On Vercel this endpoint is a serverless function — check the deployment logs.',
+      detail: `HTTP ${response.status}`,
+    });
+  }
+
+  const body = (await response.json().catch(() => null)) as Partial<ServerConfig> | null;
+  cached = { gemini: body?.gemini === true, imgbb: body?.imgbb === true };
+  return cached;
+}
+
+/** Test seam, and used after a retry so a fixed key is picked up. */
+export function resetServerConfig(): void {
+  cached = null;
 }

@@ -3,7 +3,6 @@ import { GEMINI } from '@/config';
 import { AppError } from '@/types';
 import { analyzeImage, analyzeImageWithFallback } from './client';
 
-const KEY = 'test-key';
 
 function reply(payload: unknown, init: { status?: number } = {}) {
   const body =
@@ -28,11 +27,13 @@ afterEach(() => vi.unstubAllGlobals());
 describe('analyzeImage — request shape', () => {
   it('posts inline base64 image bytes to the interactions endpoint', async () => {
     fetchMock.mockReturnValue(reply({ items: [], scene: 'single-item' }));
-    await analyzeImage('QUJD', 'image/jpeg', KEY);
+    await analyzeImage('QUJD', 'image/jpeg');
 
     const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
     expect(url).toBe(GEMINI.ENDPOINT);
-    expect((init.headers as Record<string, string>)['x-goog-api-key']).toBe(KEY);
+    // Same-origin, and carrying no credential: the proxy attaches the key.
+    expect(url.startsWith('/api/')).toBe(true);
+    expect((init.headers as Record<string, string>)['x-goog-api-key']).toBeUndefined();
 
     const body = JSON.parse(init.body as string) as {
       model: string;
@@ -85,7 +86,7 @@ describe('analyzeImage — response parsing', () => {
         ),
       ),
     );
-    const r = await analyzeImage('x', 'image/jpeg', KEY);
+    const r = await analyzeImage('x', 'image/jpeg');
     expect(r.items).toHaveLength(1);
     expect(r.items[0]?.name).toBe('banana peel');
   });
@@ -102,7 +103,7 @@ describe('analyzeImage — response parsing', () => {
         scene: 'few-items',
       }),
     );
-    const r = await analyzeImage('x', 'image/jpeg', KEY);
+    const r = await analyzeImage('x', 'image/jpeg');
     expect(r.items).toHaveLength(1);
     expect(r.items[0]?.material).toBe('plastic');
   });
@@ -114,7 +115,7 @@ describe('analyzeImage — response parsing', () => {
         scene: 'single-item',
       }),
     );
-    expect((await analyzeImage('x', 'image/jpeg', KEY)).items).toHaveLength(0);
+    expect((await analyzeImage('x', 'image/jpeg')).items).toHaveLength(0);
   });
 
   it('clamps confidence into 0..1', async () => {
@@ -124,7 +125,7 @@ describe('analyzeImage — response parsing', () => {
         scene: 'single-item',
       }),
     );
-    expect((await analyzeImage('x', 'image/jpeg', KEY)).items[0]?.confidence).toBe(1);
+    expect((await analyzeImage('x', 'image/jpeg')).items[0]?.confidence).toBe(1);
   });
 
   it('discards a malformed box rather than drawing it', async () => {
@@ -134,7 +135,7 @@ describe('analyzeImage — response parsing', () => {
         scene: 'single-item',
       }),
     );
-    expect((await analyzeImage('x', 'image/jpeg', KEY)).items[0]?.box_2d).toEqual([]);
+    expect((await analyzeImage('x', 'image/jpeg')).items[0]?.box_2d).toEqual([]);
   });
 
   it('treats an unrecognised soiled value as unknown', async () => {
@@ -144,12 +145,12 @@ describe('analyzeImage — response parsing', () => {
         scene: 'single-item',
       }),
     );
-    expect((await analyzeImage('x', 'image/jpeg', KEY)).items[0]?.soiled).toBe('unknown');
+    expect((await analyzeImage('x', 'image/jpeg')).items[0]?.soiled).toBe('unknown');
   });
 
   it('falls back to a safe scene value when the model omits it', async () => {
     fetchMock.mockReturnValue(reply({ items: [] }));
-    expect((await analyzeImage('x', 'image/jpeg', KEY)).scene).toBe('few-items');
+    expect((await analyzeImage('x', 'image/jpeg')).scene).toBe('few-items');
   });
 
   it('raises a clear error when the response is not JSON', async () => {
@@ -161,14 +162,14 @@ describe('analyzeImage — response parsing', () => {
         ),
       ),
     );
-    await expect(analyzeImage('x', 'image/jpeg', KEY)).rejects.toMatchObject({
+    await expect(analyzeImage('x', 'image/jpeg')).rejects.toMatchObject({
       code: 'INFERENCE_FAILED',
     });
   });
 
   it('raises a clear error when the response carries no text at all', async () => {
     fetchMock.mockReturnValue(Promise.resolve(new Response(JSON.stringify({ steps: [] }), { status: 200 })));
-    await expect(analyzeImage('x', 'image/jpeg', KEY)).rejects.toBeInstanceOf(AppError);
+    await expect(analyzeImage('x', 'image/jpeg')).rejects.toBeInstanceOf(AppError);
   });
 });
 
@@ -179,22 +180,32 @@ describe('analyzeImage — HTTP failures map to actionable errors', () => {
     [429, 'API_RATE_LIMITED'],
     [500, 'API_UNAVAILABLE'],
     [503, 'API_UNAVAILABLE'],
+    [412, 'API_KEY_MISSING'],
     [400, 'INFERENCE_FAILED'],
   ])('maps HTTP %s to %s', async (statusCode, code) => {
     fetchMock.mockReturnValue(reply({ error: { message: 'nope' } }, { status: statusCode }));
-    await expect(analyzeImage('x', 'image/jpeg', KEY)).rejects.toMatchObject({ code });
+    await expect(analyzeImage('x', 'image/jpeg')).rejects.toMatchObject({ code });
   });
 
   it('always offers the user a way forward', async () => {
     fetchMock.mockReturnValue(reply({ error: { message: 'nope' } }, { status: 401 }));
-    await expect(analyzeImage('x', 'image/jpeg', KEY)).rejects.toMatchObject({
-      hint: expect.stringContaining('VITE_GEMINI_API_KEY'),
+    await expect(analyzeImage('x', 'image/jpeg')).rejects.toMatchObject({
+      hint: expect.stringContaining('GEMINI_API_KEY'),
+    });
+  });
+
+  it('keeps a busy upstream retryable, so the model fallback still fires', async () => {
+    // If a missing key and an overloaded model shared a status code, a
+    // misconfiguration would burn through every fallback before failing.
+    fetchMock.mockReturnValue(reply({ error: { message: 'high demand' } }, { status: 503 }));
+    await expect(analyzeImage('x', 'image/jpeg')).rejects.toMatchObject({
+      code: 'API_UNAVAILABLE',
     });
   });
 
   it('reports a network failure as unreachable, not as a bad image', async () => {
     fetchMock.mockRejectedValue(new TypeError('Failed to fetch'));
-    await expect(analyzeImage('x', 'image/jpeg', KEY)).rejects.toMatchObject({
+    await expect(analyzeImage('x', 'image/jpeg')).rejects.toMatchObject({
       code: 'API_UNREACHABLE',
     });
   });
@@ -213,7 +224,7 @@ describe('analyzeImageWithFallback', () => {
     // The real failure this exists for: gemini-3.7-flash returned 500
     // "experiencing high demand" while other models answered fine seconds later.
     fetchMock.mockReturnValueOnce(overloaded()).mockReturnValueOnce(ok());
-    const r = await analyzeImageWithFallback('x', 'image/jpeg', KEY);
+    const r = await analyzeImageWithFallback('x', 'image/jpeg');
 
     expect(fetchMock).toHaveBeenCalledTimes(2);
     const first = JSON.parse((fetchMock.mock.calls[0]![1] as RequestInit).body as string) as {
@@ -232,7 +243,7 @@ describe('analyzeImageWithFallback', () => {
     fetchMock
       .mockReturnValueOnce(reply({ error: { message: 'slow down' } }, { status: 429 }))
       .mockReturnValueOnce(ok());
-    await expect(analyzeImageWithFallback('x', 'image/jpeg', KEY)).resolves.toBeDefined();
+    await expect(analyzeImageWithFallback('x', 'image/jpeg')).resolves.toBeDefined();
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
@@ -240,7 +251,7 @@ describe('analyzeImageWithFallback', () => {
     // A bad key fails the same way everywhere. Retrying it against the whole
     // list wastes time and buries the actual problem.
     fetchMock.mockReturnValue(reply({ error: { message: 'denied' } }, { status: 403 }));
-    await expect(analyzeImageWithFallback('x', 'image/jpeg', KEY)).rejects.toMatchObject({
+    await expect(analyzeImageWithFallback('x', 'image/jpeg')).rejects.toMatchObject({
       code: 'API_KEY_INVALID',
     });
     expect(fetchMock).toHaveBeenCalledTimes(1);
@@ -248,13 +259,13 @@ describe('analyzeImageWithFallback', () => {
 
   it('does not retry a malformed response', async () => {
     fetchMock.mockReturnValue(reply({ error: { message: 'bad request' } }, { status: 400 }));
-    await expect(analyzeImageWithFallback('x', 'image/jpeg', KEY)).rejects.toBeInstanceOf(AppError);
+    await expect(analyzeImageWithFallback('x', 'image/jpeg')).rejects.toBeInstanceOf(AppError);
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
   it('surfaces the last real error when every model is down', async () => {
     fetchMock.mockReturnValue(overloaded());
-    await expect(analyzeImageWithFallback('x', 'image/jpeg', KEY)).rejects.toMatchObject({
+    await expect(analyzeImageWithFallback('x', 'image/jpeg')).rejects.toMatchObject({
       code: 'API_UNAVAILABLE',
     });
     expect(fetchMock).toHaveBeenCalledTimes(1 + GEMINI.FALLBACK_MODELS.length);
@@ -262,7 +273,7 @@ describe('analyzeImageWithFallback', () => {
 
   it('uses the configured model by default', async () => {
     fetchMock.mockReturnValue(ok());
-    await analyzeImageWithFallback('x', 'image/jpeg', KEY);
+    await analyzeImageWithFallback('x', 'image/jpeg');
     const body = JSON.parse((fetchMock.mock.calls[0]![1] as RequestInit).body as string) as {
       model: string;
     };
@@ -277,7 +288,7 @@ describe('what leaves the device', () => {
     // request body stays that way: a future change that folded metadata into
     // the request would silently start disclosing where the user was standing.
     fetchMock.mockReturnValue(reply({ items: [], scene: 'single-item' }));
-    await analyzeImage('QUJD', 'image/jpeg', KEY);
+    await analyzeImage('QUJD', 'image/jpeg');
 
     const body = JSON.parse((fetchMock.mock.calls[0]![1] as RequestInit).body as string) as Record<
       string,

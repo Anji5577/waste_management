@@ -10,26 +10,21 @@
     />
     <meta name="theme-color" content="#059669" />
     <!--
-      Every external host the app may contact, and no others. If any code tried
-      to send a photo, a coordinate or a report anywhere else, the browser would
-      block it.
+      The browser no longer talks to Google or the image host at all — those
+      calls go through this site's own /api/* proxy, which holds the keys. What
+      remains:
 
-        generativelanguage.googleapis.com  the photo, for classification
-        nominatim.openstreetmap.org        the coordinates, for an address
-        api.imgbb.com                      both images, for the report
-        *.supabase.co                      the report row
-        i.ibb.co                           hosted images, shown and embedded in PDFs
+        nominatim.openstreetmap.org  the coordinates, for an address
+        *.supabase.co                the report row (publishable key, by design)
+        i.ibb.co                     hosted images, shown and embedded in PDFs
 
-      This is a much weaker guarantee than the original local-only build had.
-      The UI states each disclosure rather than implying otherwise.
-
-      `worker-src blob:` is required: the image pipeline decodes off the main
-      thread, and without it the composite step fails with a CSP violation
-      rather than an error the user could act on.
+      Removing api.imgbb.com and generativelanguage.googleapis.com from
+      connect-src is not cosmetic: if a future change tried to call either
+      directly with a client-side key, the browser would block it.
     -->
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data: https://i.ibb.co; media-src 'self' blob:; worker-src 'self' blob:; connect-src 'self' https://generativelanguage.googleapis.com https://nominatim.openstreetmap.org https://api.imgbb.com https://*.supabase.co https://i.ibb.co; object-src 'none'; base-uri 'self'; form-action 'none'"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data: https://i.ibb.co; media-src 'self' blob:; worker-src 'self' blob:; connect-src 'self' https://nominatim.openstreetmap.org https://*.supabase.co https://i.ibb.co; object-src 'none'; base-uri 'self'; form-action 'none'"
     />
   </head>
   <body>

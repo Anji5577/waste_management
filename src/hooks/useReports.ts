@@ -8,7 +8,7 @@ export type ReportsState =
   | { status: 'ready'; reports: StoredReport[] }
   | { status: 'error'; error: AppError };
 
-export function useReports(enabled: boolean) {
+export function useReports(enabled: boolean, imgbbAvailable: boolean) {
   const [state, setState] = useState<ReportsState>({ status: 'idle' });
   const mounted = useRef(true);
 
@@ -20,7 +20,7 @@ export function useReports(enabled: boolean) {
   }, []);
 
   const load = useCallback(async () => {
-    if (!isStorageConfigured()) {
+    if (!isStorageConfigured(imgbbAvailable)) {
       setState({
         status: 'error',
         error: new AppError('STORAGE_NOT_CONFIGURED', 'Saved reports are not configured.', {
@@ -43,7 +43,7 @@ export function useReports(enabled: boolean) {
             : new AppError('REPORT_FETCH_FAILED', 'Saved reports could not be loaded.'),
       });
     }
-  }, []);
+  }, [imgbbAvailable]);
 
   useEffect(() => {
     if (enabled) void load();

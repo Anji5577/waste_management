@@ -21,7 +21,7 @@
  */
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { extname, join } from 'node:path';
-import { analyzeImage } from '@/ai/gemini/client';
+import { analyzeImageWithFallback } from '@/ai/gemini/client';
 import { classifyObject } from '@/ai/wasteRules';
 import { DETECTION } from '@/config';
 import type { WasteCategory } from '@/types';
@@ -35,11 +35,18 @@ if (!root) {
   process.exit(1);
 }
 
-const apiKey = process.env.VITE_GEMINI_API_KEY ?? process.env.GEMINI_API_KEY;
-if (!apiKey) {
-  console.error('Set VITE_GEMINI_API_KEY (or GEMINI_API_KEY) before running the eval.');
-  process.exit(1);
-}
+// The harness goes through the same proxy the browser does, so it holds no key
+// of its own. `npm run dev` (or `vercel dev`) must be running.
+const BASE = process.env.EVAL_BASE_URL ?? 'http://localhost:5173';
+
+// The client posts to a relative '/api/...' path, which Node cannot resolve on
+// its own — give it an origin.
+const nativeFetch = globalThis.fetch.bind(globalThis);
+globalThis.fetch = ((input: RequestInfo | URL, init?: RequestInit) =>
+  nativeFetch(
+    typeof input === 'string' && input.startsWith('/') ? `${BASE}${input}` : input,
+    init,
+  ));
 
 const MIME: Record<string, string> = {
   '.jpg': 'image/jpeg',
@@ -77,7 +84,7 @@ for (const truth of STREAMS) {
     let predicted: WasteCategory = 'UNCERTAIN';
     let detail = '';
     try {
-      const result = await analyzeImage(base64, mime, apiKey);
+      const result = await analyzeImageWithFallback(base64, mime);
       const items = result.items
         .filter((i) => i.confidence >= DETECTION.MIN_ITEM_CONFIDENCE)
         .map((i, idx) =>

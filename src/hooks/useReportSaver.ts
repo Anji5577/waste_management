@@ -1,6 +1,6 @@
 import { useCallback, useRef, useState } from 'react';
 import { uploadImage } from '@/services/imgbb';
-import { getImgbbKey, isStorageConfigured, saveReport, type StoredReport } from '@/services/reports';
+import { isStorageConfigured, saveReport, type StoredReport } from '@/services/reports';
 import { renderAnalyzedImage } from '@/utils/renderAnalyzedImage';
 import { AppError, type AnalysisResult, type GeoStatus } from '@/types';
 
@@ -26,9 +26,15 @@ export function useReportSaver() {
   const inFlight = useRef(false);
 
   const save = useCallback(
-    async (source: Blob, result: AnalysisResult, location: GeoStatus, takenAt: number | null) => {
+    async (
+      source: Blob,
+      result: AnalysisResult,
+      location: GeoStatus,
+      takenAt: number | null,
+      imgbbAvailable: boolean,
+    ) => {
       if (inFlight.current) return;
-      if (!isStorageConfigured()) {
+      if (!isStorageConfigured(imgbbAvailable)) {
         setState({
           status: 'error',
           error: new AppError('STORAGE_NOT_CONFIGURED', 'Report saving is not configured.', {
@@ -39,19 +45,18 @@ export function useReportSaver() {
       }
 
       inFlight.current = true;
-      const imgbbKey = getImgbbKey()!;
       const stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-');
 
       try {
         setState({ status: 'saving', step: 'Uploading the original photo…' });
-        const original = await uploadImage(source, `waste-${stamp}-original`, imgbbKey);
+        const original = await uploadImage(source, `waste-${stamp}-original`);
 
         setState({ status: 'saving', step: 'Drawing the analysis onto the photo…' });
         let analyzedUrl: string | null = null;
         try {
           const annotated = await renderAnalyzedImage(source, result.objects, location);
           setState({ status: 'saving', step: 'Uploading the analysed photo…' });
-          analyzedUrl = (await uploadImage(annotated, `waste-${stamp}-analyzed`, imgbbKey)).url;
+          analyzedUrl = (await uploadImage(annotated, `waste-${stamp}-analyzed`)).url;
         } catch {
           // A failed composite must not cost the whole report. The original and
           // the verdict are still worth keeping.

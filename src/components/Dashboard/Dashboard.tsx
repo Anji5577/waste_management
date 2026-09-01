@@ -189,8 +189,14 @@ function ReportCard({ report, onDeleted }: { report: StoredReport; onDeleted: ()
   );
 }
 
-export function Dashboard({ active }: { active: boolean }) {
-  const { state, reload } = useReports(active);
+export function Dashboard({
+  active,
+  imgbbAvailable,
+}: {
+  active: boolean;
+  imgbbAvailable: boolean;
+}) {
+  const { state, reload } = useReports(active, imgbbAvailable);
 
   if (state.status === 'loading' || state.status === 'idle') {
     return (

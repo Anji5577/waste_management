@@ -1,6 +1,6 @@
 import { DETECTION, GEMINI } from '@/config';
 import { analyzeImageWithFallback, type GeminiItem } from '@/ai/gemini/client';
-import { getApiKey } from '@/ai/gemini/apiKey';
+import { fetchServerConfig } from '@/ai/gemini/apiKey';
 import { canvasToBlob, type PreparedImage } from '@/ai/preprocessing/image';
 import { clampToImage, iou } from '@/ai/postprocessing/boxes';
 import { classifyObject, isSmallRegion, summarize } from '@/ai/wasteRules';
@@ -62,37 +62,40 @@ export class GeminiEngine implements InferenceEngine {
    */
   readonly isLocal = false;
 
-  prepare(onStatus?: (s: EngineStatus) => void): Promise<void> {
-    onStatus?.({ stage: 'checking', message: 'Checking Gemini configuration…', error: null });
+  /**
+   * Readiness is now a question only the server can answer.
+   *
+   * The key lives server-side, so the browser cannot check it directly — it
+   * asks `/api/config`, which reports whether the key is present without ever
+   * revealing it.
+   */
+  async prepare(onStatus?: (s: EngineStatus) => void): Promise<void> {
+    onStatus?.({ stage: 'checking', message: 'Checking configuration…', error: null });
     try {
-      getApiKey();
+      const config = await fetchServerConfig();
+      if (!config.gemini) {
+        throw new AppError('API_KEY_MISSING', 'Gemini is not configured on the server.', {
+          hint: 'Set GEMINI_API_KEY (no VITE_ prefix) in your environment, then redeploy.',
+        });
+      }
     } catch (error) {
       const appError =
         error instanceof AppError
           ? error
           : new AppError('API_KEY_MISSING', 'Gemini is not configured.', { cause: error });
       onStatus?.({ stage: 'error', message: appError.message, error: appError });
-      return Promise.reject(appError);
+      throw appError;
     }
-    onStatus?.({
-      stage: 'ready',
-      // Names the model that will be *tried* first. When capacity forces a
-      // fallback, the result panel and the report both say which model actually
-      // answered, so the two never silently disagree.
-      message: `Ready — ${GEMINI.MODEL}`,
-      error: null,
-    });
-    return Promise.resolve();
+    onStatus?.({ stage: 'ready', message: `Ready — ${GEMINI.MODEL}`, error: null });
   }
 
   async analyze(image: PreparedImage, options: AnalyzeOptions = {}): Promise<AnalysisResult> {
     const started = performance.now();
-    const apiKey = getApiKey();
     const { base64, mimeType } = await encode(image);
     options.signal?.throwIfAborted();
 
     const requestStart = performance.now();
-    const result = await analyzeImageWithFallback(base64, mimeType, apiKey, options.signal);
+    const result = await analyzeImageWithFallback(base64, mimeType, options.signal);
     const requestMs = performance.now() - requestStart;
 
     const wideScene = result.scene === 'pile-or-scene';

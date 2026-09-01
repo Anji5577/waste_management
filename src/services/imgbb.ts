@@ -18,22 +18,24 @@ export interface UploadedImage {
 export async function uploadImage(
   blob: Blob,
   name: string,
-  apiKey: string,
   signal?: AbortSignal,
 ): Promise<UploadedImage> {
   const base64 = await blobToBase64(blob);
 
-  const form = new FormData();
-  form.set('key', apiKey);
-  form.set('image', base64);
-  form.set('name', name);
-  if (STORAGE.IMGBB_EXPIRY_DAYS > 0) {
-    form.set('expiration', String(STORAGE.IMGBB_EXPIRY_DAYS * 86_400));
-  }
-
   let response: Response;
   try {
-    const init: RequestInit = { method: 'POST', body: form };
+    // JSON to our own proxy; it rebuilds the multipart form with the key.
+    const init: RequestInit = {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        image: base64,
+        name,
+        ...(STORAGE.IMGBB_EXPIRY_DAYS > 0
+          ? { expiration: STORAGE.IMGBB_EXPIRY_DAYS * 86_400 }
+          : {}),
+      }),
+    };
     if (signal) init.signal = signal;
     response = await fetch(STORAGE.IMGBB_ENDPOINT, init);
   } catch (cause) {
@@ -52,8 +54,8 @@ export async function uploadImage(
   if (!response.ok || !body.success || !body.data?.url) {
     throw new AppError('UPLOAD_FAILED', 'The image host rejected the upload.', {
       hint:
-        response.status === 400
-          ? 'Check VITE_IMGBB_API_KEY in your .env file.'
+        response.status === 412
+          ? 'Set IMGBB_API_KEY (no VITE_ prefix) in your environment and redeploy.'
           : 'Try again in a moment.',
       detail: `HTTP ${response.status}: ${body.error?.message ?? response.statusText}`,
     });

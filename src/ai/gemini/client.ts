@@ -56,7 +56,15 @@ export function isTransient(status: number): boolean {
 function httpError(status: number, message: string): AppError {
   if (status === 401 || status === 403) {
     return new AppError('API_KEY_INVALID', 'The Gemini API key was rejected.', {
-      hint: 'Check VITE_GEMINI_API_KEY in your .env file, then restart the dev server.',
+      hint: 'Check GEMINI_API_KEY on the server, then redeploy.',
+      detail: `HTTP ${status}: ${message}`,
+    });
+  }
+  // 412 is the proxy saying it has no key. Distinct from Gemini's own 503, which
+  // means "busy" and must stay retryable — see missingKey() in api/_handlers.ts.
+  if (status === 412) {
+    return new AppError('API_KEY_MISSING', 'Gemini is not configured on the server.', {
+      hint: 'Set GEMINI_API_KEY (no VITE_ prefix) in your environment and redeploy.',
       detail: `HTTP ${status}: ${message}`,
     });
   }
@@ -138,7 +146,6 @@ function parseResult(
 export async function analyzeImage(
   imageBase64: string,
   mimeType: string,
-  apiKey: string,
   signal?: AbortSignal,
   model: string = GEMINI.MODEL,
 ): Promise<GeminiResult> {
@@ -150,7 +157,8 @@ export async function analyzeImage(
   try {
     response = await fetch(`${GEMINI.ENDPOINT}`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
+      // No key here by design — the proxy attaches it. See api/_handlers.ts.
+      headers: { 'Content-Type': 'application/json' },
       signal: controller.signal,
       body: JSON.stringify({
         model,
@@ -219,7 +227,6 @@ export async function analyzeImage(
 export async function analyzeImageWithFallback(
   imageBase64: string,
   mimeType: string,
-  apiKey: string,
   signal?: AbortSignal,
 ): Promise<GeminiResult> {
   const candidates = [GEMINI.MODEL, ...GEMINI.FALLBACK_MODELS];
@@ -227,7 +234,7 @@ export async function analyzeImageWithFallback(
 
   for (const model of candidates) {
     try {
-      return await analyzeImage(imageBase64, mimeType, apiKey, signal, model);
+      return await analyzeImage(imageBase64, mimeType, signal, model);
     } catch (error) {
       lastError = error;
       if (signal?.aborted) throw error;

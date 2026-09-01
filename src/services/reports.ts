@@ -50,14 +50,14 @@ export function getSupabaseConfig(): SupabaseConfig | null {
   return { url: url.replace(/\/+$/, ''), anonKey };
 }
 
-export function getImgbbKey(): string | null {
-  const key = (import.meta.env.VITE_IMGBB_API_KEY as string | undefined)?.trim();
-  return key ? key : null;
-}
-
-/** True when both halves of the pipeline are configured. */
-export function isStorageConfigured(): boolean {
-  return getSupabaseConfig() !== null && getImgbbKey() !== null;
+/**
+ * True when both halves of the pipeline are configured.
+ *
+ * The image host's key is server-side now, so the browser cannot see it — it is
+ * reported by `/api/config`, which the engine fetches during `prepare()`.
+ */
+export function isStorageConfigured(imgbbAvailable: boolean): boolean {
+  return getSupabaseConfig() !== null && imgbbAvailable;
 }
 
 /**

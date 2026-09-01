@@ -25,9 +25,8 @@ until it is set — there is no local fallback.
 
 ### Optional: saved reports and the dashboard
 
-To keep a record of each analysis, set the three storage variables in `.env`
-(`VITE_IMGBB_API_KEY`, `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`) and run the
-migration once:
+To keep a record of each analysis, set `IMGBB_API_KEY`, `VITE_SUPABASE_URL` and
+`VITE_SUPABASE_ANON_KEY`, then run the migrations once:
 
 ```
 supabase/001_reports.sql        →  paste into the Supabase SQL editor
@@ -46,20 +45,36 @@ timestamps.
 
 ---
 
-## Security: read before deploying
+## Deploying to Vercel
 
-The key is read from `VITE_GEMINI_API_KEY`, and **Vite inlines `VITE_`-prefixed
-variables into the JavaScript bundle at build time.** It is therefore readable by
-anyone who loads the site. It is not a secret.
+The Gemini and image-host keys are held by serverless functions in `api/`, not
+by the browser. Set these in **Settings → Environment Variables**:
 
-That is a deliberate trade for local and private use. **Do not deploy this build
-publicly with a key you care about** — anyone can extract it and spend your
-quota. For a public deployment, move the call behind a small server endpoint that
-holds the key server-side and have the browser post the image to that instead.
-The `InferenceEngine` seam in `src/ai/engine/` is where that swap goes; it is the
-same seam that made replacing the on-device model straightforward.
+| Variable | Prefix? | Notes |
+|---|---|---|
+| `GEMINI_API_KEY` | **no** | Required. Stays on the server. |
+| `IMGBB_API_KEY` | **no** | Optional — enables saving reports. |
+| `VITE_SUPABASE_URL` | yes | Public endpoint. |
+| `VITE_SUPABASE_ANON_KEY` | yes | Publishable key; public by design. |
 
-`.env` is gitignored. Keep it that way.
+The `VITE_` prefix is the whole distinction. Vite **inlines every `VITE_`
+variable into the JavaScript bundle at build time**, so a `VITE_`-prefixed key is
+readable by anyone who loads the site. Vercel's *Secret* vs *Config* toggle only
+controls who can read a value back in the dashboard — it does not stop a `VITE_`
+variable reaching the browser. The two keys above that matter deliberately have
+no prefix, so they never enter the bundle.
+
+Verified: after `npm run build`, neither key appears anywhere in `dist/`, and the
+browser makes no request to `googleapis.com` or `api.imgbb.com` — only to
+`/api/*` on its own origin. The CSP no longer permits those hosts at all, so a
+future change that tried to call them directly would be blocked.
+
+Vercel auto-detects the Vite build and the `api/` functions; no `vercel.json` is
+needed. Files beginning with `_` (like `api/_handlers.ts`) are shared code, not
+routes.
+
+Locally, `npm run dev` serves the same handlers through a Vite middleware, so the
+proxy can be exercised without the Vercel CLI.
 
 ## What it does
 

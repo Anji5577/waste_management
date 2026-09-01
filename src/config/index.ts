@@ -45,10 +45,14 @@ export const IMAGE = {
 
 export const GEMINI = {
   /**
-   * The Interactions endpoint. Note this is NOT the older `:generateContent`
-   * shape — request and response bodies differ.
+   * Our own serverless proxy, not Google directly.
+   *
+   * The API key is attached server-side in api/_handlers.ts. A key shipped to
+   * the browser is public the moment the site is — Vite inlines every VITE_
+   * variable into the bundle — so the browser never sees it and never talks to
+   * Google. The request body is still the Interactions shape, forwarded as-is.
    */
-  ENDPOINT: 'https://generativelanguage.googleapis.com/v1beta/interactions',
+  ENDPOINT: '/api/gemini',
 
   /**
    * Primary model.
@@ -112,14 +116,13 @@ export const GEMINI = {
 
 export const STORAGE = {
   /**
-   * ImgBB image host.
+   * Our own serverless proxy, not ImgBB directly — the key stays server-side.
    *
-   * IMPORTANT: uploads are PUBLIC. Every returned URL is viewable by anyone who
-   * has it — there is no access control, and the key is in the JavaScript
-   * bundle. Photographs of a street may contain people, faces and number
-   * plates; the UI says so before anything is uploaded.
+   * IMPORTANT, and unchanged by the proxy: uploads are PUBLIC. Every returned
+   * URL is viewable by anyone who has it. Photographs of a street may contain
+   * people, faces and number plates.
    */
-  IMGBB_ENDPOINT: 'https://api.imgbb.com/1/upload',
+  IMGBB_ENDPOINT: '/api/imgbb',
   /** Days ImgBB keeps the image. 0 = forever. */
   IMGBB_EXPIRY_DAYS: 0,
   /** Long edge of the composited "analyzed" image written to the host. */
