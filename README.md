@@ -1,11 +1,13 @@
-# AI Waste Segregation
+# AI Waste Segregation ♻️
 
-Photograph an item, find out whether it belongs in the **wet**, **dry**, or
-**hazardous** bin. Classification is done by Google's Gemini API (`gemini-3.5-flash`, with
-automatic fallback); the disposal rules are applied locally and
-deterministically.
+An AI-based waste management system that identifies **wet**, **dry**, or
+**hazardous** waste from a photo, captures the GPS location, and generates
+reports for tracking and monitoring waste collection and segregation.
 
-When it doesn't know, it says **UNCERTAIN** rather than guessing.
+Classification comes from Google's Gemini API (`gemini-3.5-flash`, with automatic
+fallback); the disposal rules are applied locally and deterministically. When the
+answer is not clear enough to act on, it says **UNCERTAIN** rather than guessing
+— a fourth outcome, and the one that keeps the other three worth trusting.
 
 > **Your photos are uploaded to Google.** Every analysis sends the image to the
 > Gemini API. This build has no offline mode and makes no privacy guarantee.
