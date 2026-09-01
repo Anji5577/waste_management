@@ -31,9 +31,14 @@ function Tally({ tally }: { tally: Record<string, number> }) {
 function ReportCard({ report, onDeleted }: { report: StoredReport; onDeleted: () => void }) {
   const when = new Date(report.taken_at ?? report.created_at);
   const thumb = report.analyzed_url ?? report.original_url;
-  // Reports are a shared board, so the delete control only appears on your own.
-  // The database cannot enforce this without sign-in — see supabase/002 — but a
-  // board where anyone can wipe everyone's findings is not a board.
+  // Every report can be deleted, not just this browser's.
+  //
+  // The first version hid the control on other devices' reports, which sounded
+  // prudent and was actually just broken: a report filed on a phone and viewed
+  // on a laptop is the same person's, but the device ids differ, so there was no
+  // way to remove your own work. Ownership is not something this app can know
+  // without sign-in, so it does not pretend to — the confirmation says plainly
+  // that the board is shared.
   const mine = report.device_id === getDeviceId();
   const [confirming, setConfirming] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -118,16 +123,14 @@ function ReportCard({ report, onDeleted }: { report: StoredReport; onDeleted: ()
               Analysed
             </a>
           )}
-          {mine && (
-            <button
-              type="button"
-              onClick={() => setConfirming(true)}
-              aria-label={`Delete your report from ${when.toLocaleString()}`}
-              className="tap ml-auto inline-flex items-center border border-red-300 px-3 text-sm font-semibold text-red-700 hover:bg-red-50 dark:border-red-800 dark:text-red-300 dark:hover:bg-red-950/40"
-            >
-              Delete
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={() => setConfirming(true)}
+            aria-label={`Delete report from ${when.toLocaleString()}`}
+            className="tap ml-auto inline-flex items-center border border-red-300 px-3 text-sm font-semibold text-red-700 hover:bg-red-50 dark:border-red-800 dark:text-red-300 dark:hover:bg-red-950/40"
+          >
+            Delete
+          </button>
         </div>
 
         {error && !confirming && (
@@ -139,8 +142,13 @@ function ReportCard({ report, onDeleted }: { report: StoredReport; onDeleted: ()
         {confirming && (
           <div className="mt-3 border border-red-300 bg-red-50 p-3 dark:border-red-900 dark:bg-red-950/50">
             <p className="text-sm font-bold text-red-900 dark:text-red-200">
-              Delete this report?
+              {mine ? 'Delete this report?' : 'Delete this report from the shared board?'}
             </p>
+            {!mine && (
+              <p className="mt-1 text-sm text-red-800 dark:text-red-300">
+                This one was filed from a different device. Deleting removes it for everyone.
+              </p>
+            )}
             {/* Stated plainly: ImgBB's delete URL is a page, not an endpoint,
                 so the images are not ours to remove. */}
             <p className="mt-1 text-sm text-red-800 dark:text-red-300">
